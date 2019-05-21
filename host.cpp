@@ -18,13 +18,13 @@ int main()
 	int B[] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0};
  	int C[10];
 
-	SimpleCLContext context(kernel_code, "simple_add");
+	SimpleCLContext context(kernel_code);
   
 	cl::Buffer buffer_A = context.createInitBuffer(sizeof(int)*10, A, SimpleCLReadOnly);
 	cl::Buffer buffer_B = context.createInitBuffer(sizeof(int)*10, B, SimpleCLReadOnly);
 	cl::Buffer buffer_C = context.createBuffer(sizeof(int)*10);
 
-	context.run(cl::NDRange(10), buffer_A, buffer_B, buffer_C);
+	context.run("simple_add", cl::NDRange(10), buffer_A, buffer_B, buffer_C);
 
 	context.readBuffer(C, buffer_C, sizeof(int)*10);
  

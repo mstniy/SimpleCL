@@ -12,7 +12,7 @@ cl_mem_flags SimpleCLContext::smt2cmf(SimpleCLMemType type)
 		return CL_MEM_READ_WRITE;
 }
 
-SimpleCLContext::SimpleCLContext(const std::string& code, const std::string& kernelName)
+SimpleCLContext::SimpleCLContext(const std::string& code)
 {
 	std::vector<cl::Platform> all_platforms;
 	cl_int err;
@@ -48,10 +48,6 @@ SimpleCLContext::SimpleCLContext(const std::string& code, const std::string& ker
 		throw "cl::Program constructor failed with error code " + std::to_string(err);
 	if(program.build({device}) != CL_SUCCESS)
 		throw "Error building: " + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device);
-
-	kernel = cl::Kernel(program,kernelName.c_str(), &err);
-	if (err != CL_SUCCESS)
-		throw "cl::Kernel constructor failed with error code " + std::to_string(err);
 }
 
 cl::Buffer SimpleCLContext::createBuffer(size_t size, SimpleCLMemType type)
@@ -76,7 +72,7 @@ cl::Buffer SimpleCLContext::createInitBuffer(size_t size, void* host_ptr, Simple
 	return buffer;
 }
 
-void SimpleCLContext::setArgs(int totalCount)
+void SimpleCLContext::setArgs(cl::Kernel& kernel, int totalCount)
 {
 }
 
