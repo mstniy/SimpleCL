@@ -5,6 +5,13 @@
 #include <string>
 #include <tuple>
 
+enum SimpleCLMemType
+{
+	SimpleCLReadOnly,
+	SimpleCLWriteOnly,
+	SimpleCLReadWrite
+};
+
 class SimpleCLContext
 {
 public:
@@ -16,15 +23,17 @@ public:
 	cl::Program program;
 	cl::Kernel kernel;
 private:
-	void setArgsPrivate(int totalCount);
-	template<typename T, typename... Args> void setArgsPrivate(int totalCount, const T& arg, const Args&... args);
+	void setArgs(int totalCount);
+	template<typename T, typename... Args> void setArgs(int totalCount, const T& arg, const Args&... args);
+	static cl_mem_flags smt2cmf(SimpleCLMemType type);
 public:
 	SimpleCLContext();
 	SimpleCLContext(const std::string& code, const std::string& kernelName);
 	SimpleCLContext(const SimpleCLContext&) = delete;
-	cl::Buffer createBuffer(size_t size, bool readOnly=false);
-	cl::Buffer createInitBuffer(size_t size, void* host_ptr, bool readOnly=false);
-	template<typename... Args> void setArgs(const Args&... args);
+	cl::Buffer createBuffer(size_t size, SimpleCLMemType type = SimpleCLReadWrite);
+	cl::Buffer createInitBuffer(size_t size, void* host_ptr, SimpleCLMemType type = SimpleCLReadWrite);
+	void readBuffer(void* host_ptr, const cl::Buffer& buffer, size_t size);
+	template<typename... Args> void run(const cl::NDRange& range, const Args&... args);
 };
 
 #include "SimpleCL.hpp"

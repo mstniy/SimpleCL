@@ -2,6 +2,16 @@
 #include <iostream>
 #include <assert.h>
 
+cl_mem_flags SimpleCLContext::smt2cmf(SimpleCLMemType type)
+{
+	if (type == SimpleCLReadOnly)
+		return CL_MEM_READ_ONLY;
+	else if (type == SimpleCLWriteOnly)
+		return CL_MEM_WRITE_ONLY;
+	else if (type == SimpleCLReadWrite)
+		return CL_MEM_READ_WRITE;
+}
+
 SimpleCLContext::SimpleCLContext(const std::string& code, const std::string& kernelName)
 {
 	std::vector<cl::Platform> all_platforms;
@@ -44,26 +54,36 @@ SimpleCLContext::SimpleCLContext(const std::string& code, const std::string& ker
 		throw "cl::Kernel constructor failed with error code " + std::to_string(err);
 }
 
-cl::Buffer SimpleCLContext::createBuffer(size_t size, bool readOnly)
+cl::Buffer SimpleCLContext::createBuffer(size_t size, SimpleCLMemType type)
 {
 	cl_int err;
-	cl::Buffer buffer(context,readOnly?CL_MEM_READ_ONLY:CL_MEM_READ_WRITE,size, NULL, &err);
+	cl_mem_flags flags=smt2cmf(type);
+	cl::Buffer buffer(context, flags, size, NULL, &err);
 	if (err != CL_SUCCESS)
 		throw "cl::Buffer constructor failed with error code " + std::to_string(err);
 
 	return buffer;
 }
 
-cl::Buffer SimpleCLContext::createInitBuffer(size_t size, void* host_ptr, bool readOnly)
+cl::Buffer SimpleCLContext::createInitBuffer(size_t size, void* host_ptr, SimpleCLMemType type)
 {
 	cl_int err;
-	cl::Buffer buffer(context,CL_MEM_COPY_HOST_PTR|(readOnly?CL_MEM_READ_ONLY:CL_MEM_READ_WRITE),size, host_ptr, &err);
+	cl_mem_flags flags=smt2cmf(type) | CL_MEM_COPY_HOST_PTR;
+	cl::Buffer buffer(context, flags, size, host_ptr, &err);
 	if (err != CL_SUCCESS)
 		throw "cl::Buffer constructor failed with error code " + std::to_string(err);
 
 	return buffer;
 }
 
-void SimpleCLContext::setArgsPrivate(int totalCount)
+void SimpleCLContext::setArgs(int totalCount)
 {
+}
+
+void SimpleCLContext::readBuffer(void* host_ptr, const cl::Buffer& buffer, size_t size)
+{
+	cl_int err;
+	err = queue.enqueueReadBuffer(buffer, CL_TRUE, 0, size, host_ptr);
+	if (err != CL_SUCCESS)
+		throw "cl::CommandQueue::enqueueReadBuffer failed with error code " + std::to_string(err);
 }
