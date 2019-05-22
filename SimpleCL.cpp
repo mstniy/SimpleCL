@@ -1,6 +1,8 @@
 #include "SimpleCL.h"
 #include <iostream>
+#include <fstream>
 #include <assert.h>
+#include <sstream>
 
 cl_mem_flags SimpleCLContext::smt2cmf(SimpleCLMemType type)
 {
@@ -12,15 +14,15 @@ cl_mem_flags SimpleCLContext::smt2cmf(SimpleCLMemType type)
 		return CL_MEM_READ_WRITE;
 }
 
-SimpleCLContext::SimpleCLContext(const std::string& code)
+SimpleCLContext::SimpleCLContext(const char* filename)
 {
 	std::vector<cl::Platform> all_platforms;
 	cl_int err;
 	err = cl::Platform::get(&all_platforms);
 	if (err != CL_SUCCESS)
-		throw "cl::Platform::get failed with error code " + std::to_string(err);
+		throw std::runtime_error("cl::Platform::get failed with error code " + std::to_string(err));
 	if(all_platforms.size()==0)
-		throw "No platforms found. Check OpenCL installation!";
+		throw std::runtime_error("No platforms found. Check OpenCL installation!");
 	platform=all_platforms[0];
 	std::cout << "Using platform: "<<platform.getInfo<CL_PLATFORM_NAME>()<<std::endl;
 	 
@@ -28,26 +30,32 @@ SimpleCLContext::SimpleCLContext(const std::string& code)
 	std::vector<cl::Device> all_devices;
 	err = platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
 	if (err != CL_SUCCESS)
-		throw "cl::Platform::getDevices failed with error code " + std::to_string(err);
+		throw std::runtime_error("cl::Platform::getDevices failed with error code " + std::to_string(err));
 	if(all_devices.size()==0)
-		throw "No devices found. Check OpenCL installation!";
+		throw std::runtime_error("No devices found. Check OpenCL installation!");
 	device=all_devices[0];
 	std::cout<< "Using device: "<<device.getInfo<CL_DEVICE_NAME>()<<std::endl;
 	 
 	context = cl::Context({device}, NULL, NULL, NULL, &err);
 	if (err != CL_SUCCESS)
-		throw "cl::Context constructor failed with error code " + std::to_string(err);
+		throw std::runtime_error("cl::Context constructor failed with error code " + std::to_string(err));
 	queue = cl::CommandQueue(context,device, 0, &err);
 	if (err != CL_SUCCESS)
-		throw "cl::CommandQueue constructor failed with error code " + std::to_string(err);
+		throw std::runtime_error("cl::CommandQueue constructor failed with error code " + std::to_string(err));
 
-	sources.push_back({code.c_str(),code.length()});
+	std::ifstream file(filename); // From https://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
+	if (file.is_open() == false)
+		throw std::runtime_error(std::string("Failed to open file \"") + filename + "\"");
+	std::stringstream buffer;
+	buffer << file.rdbuf();
+	source = buffer.str();
+	sources.push_back({source.c_str(), source.length()});
 
 	program = cl::Program(context,sources, &err);
 	if (err != CL_SUCCESS)
-		throw "cl::Program constructor failed with error code " + std::to_string(err);
+		throw std::runtime_error("cl::Program constructor failed with error code " + std::to_string(err));
 	if(program.build({device}) != CL_SUCCESS)
-		throw "Error building: " + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device);
+		throw std::runtime_error(std::runtime_error("Error building: " + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)));
 }
 
 cl::Buffer SimpleCLContext::createBuffer(size_t size, SimpleCLMemType type)
@@ -56,7 +64,7 @@ cl::Buffer SimpleCLContext::createBuffer(size_t size, SimpleCLMemType type)
 	cl_mem_flags flags=smt2cmf(type);
 	cl::Buffer buffer(context, flags, size, NULL, &err);
 	if (err != CL_SUCCESS)
-		throw "cl::Buffer constructor failed with error code " + std::to_string(err);
+		throw std::runtime_error("cl::Buffer constructor failed with error code " + std::to_string(err));
 
 	return buffer;
 }
@@ -67,7 +75,7 @@ cl::Buffer SimpleCLContext::createInitBuffer(size_t size, void* host_ptr, Simple
 	cl_mem_flags flags=smt2cmf(type) | CL_MEM_COPY_HOST_PTR;
 	cl::Buffer buffer(context, flags, size, host_ptr, &err);
 	if (err != CL_SUCCESS)
-		throw "cl::Buffer constructor failed with error code " + std::to_string(err);
+		throw std::runtime_error("cl::Buffer constructor failed with error code " + std::to_string(err));
 
 	return buffer;
 }
@@ -81,5 +89,5 @@ void SimpleCLContext::readBuffer(void* host_ptr, const cl::Buffer& buffer, size_
 	cl_int err;
 	err = queue.enqueueReadBuffer(buffer, CL_TRUE, 0, size, host_ptr);
 	if (err != CL_SUCCESS)
-		throw "cl::CommandQueue::enqueueReadBuffer failed with error code " + std::to_string(err);
+		throw std::runtime_error("cl::CommandQueue::enqueueReadBuffer failed with error code " + std::to_string(err));
 }

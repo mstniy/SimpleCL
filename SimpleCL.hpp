@@ -4,14 +4,14 @@ void SimpleCLContext::run(const char* kernelName, const cl::NDRange& range, cons
 	cl_int err;
 	cl::Kernel kernel(program,kernelName, &err);
 	if (err != CL_SUCCESS)
-		throw "cl::Kernel constructor failed with error code " + std::to_string(err);
+		throw std::runtime_error("cl::Kernel constructor failed with error code " + std::to_string(err));
 	setArgs(kernel, sizeof...(args), args...);
 	err = queue.enqueueNDRangeKernel(kernel, cl::NullRange, range, cl::NullRange);
 	if (err != CL_SUCCESS)
-		throw "cl::CommandQueue::enqueueNDRangeKernel failed with error code " + std::to_string(err);
+		throw std::runtime_error("cl::CommandQueue::enqueueNDRangeKernel failed with error code " + std::to_string(err));
 	err = queue.finish();
 	if (err != CL_SUCCESS)
-		throw "cl::CommandQueue::finish failed with error code " + std::to_string(err);
+		throw std::runtime_error("cl::CommandQueue::finish failed with error code " + std::to_string(err));
 }
 
 template<typename T, typename... Args> 

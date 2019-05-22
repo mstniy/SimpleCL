@@ -7,18 +7,11 @@ using namespace std;
  
 int main()
 {
-	// kernel calculates for each element C=A+B
-	std::string kernel_code=
-			"void kernel simple_add(global const int* A, global const int* B, global int* C)"
-			"{"
-			"	C[get_global_id(0)]=A[get_global_id(0)]+B[get_global_id(0)];"
-			"}";
-
 	int A[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 	int B[] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0};
  	int C[10];
 
-	SimpleCLContext context(kernel_code);
+	SimpleCLContext context("host.cl");
   
 	cl::Buffer buffer_A = context.createInitBuffer(sizeof(int)*10, A, SimpleCLReadOnly);
 	cl::Buffer buffer_B = context.createInitBuffer(sizeof(int)*10, B, SimpleCLReadOnly);

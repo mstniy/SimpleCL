@@ -19,6 +19,7 @@ public:
 	cl::Device device;
 	cl::Context context;
 	cl::CommandQueue queue;
+	std::string source;
 	cl::Program::Sources sources;
 	cl::Program program;
 private:
@@ -27,7 +28,7 @@ private:
 	static cl_mem_flags smt2cmf(SimpleCLMemType type);
 public:
 	SimpleCLContext();
-	SimpleCLContext(const std::string& code);
+	SimpleCLContext(const char* filename);
 	SimpleCLContext(const SimpleCLContext&) = delete;
 	cl::Buffer createBuffer(size_t size, SimpleCLMemType type = SimpleCLReadWrite);
 	cl::Buffer createInitBuffer(size_t size, void* host_ptr, SimpleCLMemType type = SimpleCLReadWrite);
