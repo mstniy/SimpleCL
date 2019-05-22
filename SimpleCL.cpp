@@ -81,14 +81,29 @@ cl::Buffer SimpleCLContext::createInitBuffer(size_t size, void* host_ptr, Simple
 	return buffer;
 }
 
-void SimpleCLContext::setArgs(cl::Kernel& kernel, int totalCount)
-{
-}
-
 void SimpleCLContext::readBuffer(void* host_ptr, const cl::Buffer& buffer, size_t size)
 {
 	cl_int err;
 	err = queue.enqueueReadBuffer(buffer, CL_TRUE, 0, size, host_ptr);
 	if (err != CL_SUCCESS)
 		throw std::runtime_error("cl::CommandQueue::enqueueReadBuffer failed with error code " + std::to_string(err));
+}
+
+SimpleCLKernel SimpleCLContext::createKernel(const char* kernelName)
+{
+	cl_int err;
+	cl::Kernel kernel(program, kernelName, &err);
+	if (err != CL_SUCCESS)
+		throw std::runtime_error("cl::Kernel constructor failed with error code " + std::to_string(err));
+	return SimpleCLKernel(kernel, queue);
+}
+
+SimpleCLKernel::SimpleCLKernel(cl::Kernel _clkernel, cl::CommandQueue _queue):
+	clkernel(_clkernel),
+	queue(_queue)
+{
+}
+
+void SimpleCLKernel::setArgs(int totalCount)
+{
 }

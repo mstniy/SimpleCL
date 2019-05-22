@@ -17,7 +17,9 @@ int main()
 	cl::Buffer buffer_B = context.createInitBuffer(sizeof(int)*10, B, SimpleCLReadOnly);
 	cl::Buffer buffer_C = context.createBuffer(sizeof(int)*10);
 
-	context.run("simple_add", cl::NDRange(10), buffer_A, buffer_B, buffer_C);
+	SimpleCLKernel kernel(context.createKernel("simple_add"));
+
+	kernel(cl::NDRange(10), buffer_A, buffer_B, buffer_C);
 
 	context.readBuffer(C, buffer_C, sizeof(int)*10);
  
