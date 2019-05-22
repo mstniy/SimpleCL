@@ -15,12 +15,8 @@ enum SimpleCLMemType
 class SimpleCLContext
 {
 public:
-	cl::Platform platform;
-	cl::Device device;
 	cl::Context context;
 	cl::CommandQueue queue;
-	std::string source;
-	cl::Program::Sources sources;
 	cl::Program program;
 private:
 	static void setArgs(cl::Kernel& kernel, int totalCount);
@@ -29,7 +25,6 @@ private:
 public:
 	SimpleCLContext();
 	SimpleCLContext(const char* filename);
-	SimpleCLContext(const SimpleCLContext&) = delete;
 	cl::Buffer createBuffer(size_t size, SimpleCLMemType type = SimpleCLReadWrite);
 	cl::Buffer createInitBuffer(size_t size, void* host_ptr, SimpleCLMemType type = SimpleCLReadWrite);
 	void readBuffer(void* host_ptr, const cl::Buffer& buffer, size_t size);

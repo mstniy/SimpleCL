@@ -23,7 +23,7 @@ SimpleCLContext::SimpleCLContext(const char* filename)
 		throw std::runtime_error("cl::Platform::get failed with error code " + std::to_string(err));
 	if(all_platforms.size()==0)
 		throw std::runtime_error("No platforms found. Check OpenCL installation!");
-	platform=all_platforms[0];
+	cl::Platform platform(all_platforms[0]);
 	std::cout << "Using platform: "<<platform.getInfo<CL_PLATFORM_NAME>()<<std::endl;
 	 
 	//get default device of the default platform
@@ -33,7 +33,7 @@ SimpleCLContext::SimpleCLContext(const char* filename)
 		throw std::runtime_error("cl::Platform::getDevices failed with error code " + std::to_string(err));
 	if(all_devices.size()==0)
 		throw std::runtime_error("No devices found. Check OpenCL installation!");
-	device=all_devices[0];
+	cl::Device device(all_devices[0]);
 	std::cout<< "Using device: "<<device.getInfo<CL_DEVICE_NAME>()<<std::endl;
 	 
 	context = cl::Context({device}, NULL, NULL, NULL, &err);
@@ -48,7 +48,8 @@ SimpleCLContext::SimpleCLContext(const char* filename)
 		throw std::runtime_error(std::string("Failed to open file \"") + filename + "\"");
 	std::stringstream buffer;
 	buffer << file.rdbuf();
-	source = buffer.str();
+	cl::Program::Sources sources;
+	std::string source(buffer.str()); // OpenCL reads garbage during build without this line. No idea why.
 	sources.push_back({source.c_str(), source.length()});
 
 	program = cl::Program(context,sources, &err);
