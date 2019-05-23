@@ -5,11 +5,11 @@ SimpleCLLocalMemory<T>::SimpleCLLocalMemory(size_t _size):
 }
 
 template<typename... Args>
-void SimpleCLKernel::operator()(const cl::NDRange& range, const Args&... args)
+void SimpleCLKernel::operator()(const cl::NDRange& globalRange, const cl::NDRange& localRange, const Args&... args)
 {
 	cl_int err;
 	setArgs(sizeof...(args), args...);
-	err = queue.enqueueNDRangeKernel(clkernel, cl::NullRange, range, cl::NullRange);
+	err = queue.enqueueNDRangeKernel(clkernel, cl::NullRange, globalRange, localRange);
 	if (err != CL_SUCCESS)
 		throw std::runtime_error("cl::CommandQueue::enqueueNDRangeKernel failed with error code " + std::to_string(err));
 	err = queue.finish();
