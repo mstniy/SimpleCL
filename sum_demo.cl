@@ -1,8 +1,3 @@
-void kernel simple_add(global const float* A, global const float* B, global float* C)
-{
-	C[get_global_id(0)]=A[get_global_id(0)]+B[get_global_id(0)];
-}
-
 kernel void sum_reduce(global float* arr, local float* partial_sums, global float* output, int N) // partial_sums must be at least of length get_local_size(0)
 {
 	int lid = get_local_id(0);
