@@ -28,7 +28,9 @@ public:
 	cl::Buffer createBuffer(size_t size, SimpleCLMemType type = SimpleCLReadWrite);
 	cl::Buffer createInitBuffer(size_t size, void* host_ptr, SimpleCLMemType type = SimpleCLReadWrite);
 	void readBuffer(void* host_ptr, const cl::Buffer& buffer, size_t size);
+	void writeBuffer(const cl::Buffer& buffer, void* host_ptr, size_t size);
 	SimpleCLKernel createKernel(const char* kernelName);
+	bool isNull() const;
 };
 
 class SimpleCLKernel

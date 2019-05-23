@@ -11,7 +11,11 @@ int main()
 	int B[] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0};
  	int C[10];
 
+	assert(SimpleCLContext().isNull());
+
 	SimpleCLContext context("host.cl");
+
+	assert(context.isNull() == false);
   
 	cl::Buffer buffer_A = context.createInitBuffer(sizeof(int)*10, A, SimpleCLReadOnly);
 	cl::Buffer buffer_B = context.createInitBuffer(sizeof(int)*10, B, SimpleCLReadOnly);
