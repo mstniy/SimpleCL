@@ -39,11 +39,11 @@ public:
 	cl::Kernel clkernel;
 	cl::CommandQueue queue;
 private:
-	SimpleCLKernel() = default;
 	SimpleCLKernel(cl::Kernel _clkernel, cl::CommandQueue _queue);
 	void setArgs(int totalCount);
 	template<typename T, typename... Args> void setArgs(int totalCount, const T& arg, const Args&... args);
 public:
+	SimpleCLKernel() = default;
 	template<typename... Args> void operator()(const cl::NDRange& range, const Args&... args);
 
 	friend SimpleCLContext;
