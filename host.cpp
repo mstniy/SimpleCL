@@ -5,20 +5,10 @@
 #include "SimpleCL.h"
 
 using namespace std;
-
-size_t decideWorkGroupSize(size_t N, size_t mwgs)
-{
-	/*if (N < mwgs)
-		return N;*/
-	for (int i=mwgs; i>1; i--) // This is assuming that mwgs is going to be small. On my system its 1024.
-		if (N%i == 0)
-			return i;
-	return 1; // Prime?
-}
  
 int main()
 {
-	const size_t N = 1000000; // Be careful to not choose a prime(ish) N! Workgroup size must be divide N, and sum_reduce kernel produces as many sums as there are workgroups. So if N is prime, workgroup size will be 1 (if N > maximumworkgroupsize) and sum_reduce will basically not do anything and the CPU will do the addition.
+	const size_t N = 1000000;
 	const int M = 3;
 	unique_ptr<cl_float[]> A(new cl_float[N]);
 	unique_ptr<cl_float[]> B(new cl_float[N]);
@@ -52,20 +42,20 @@ int main()
 	cout << "..." << endl;
 
 	SimpleCLKernel sumKernel(context.createKernel("sum_reduce"));
-	size_t sumKernelWGS = decideWorkGroupSize(N, sumKernel.getMaxWorkGroupSize());
-	assert(N % sumKernelWGS == 0);
+	size_t sumKernelWGS = std::min(N, sumKernel.getMaxWorkGroupSize());
 	cout << "sumKernel workgroup size: " << sumKernelWGS << endl;
-	size_t nowg = N/sumKernelWGS;
+	int Nrounded = N%sumKernelWGS == 0 ? N : N+sumKernelWGS-(N%sumKernelWGS); // We might create at most maxworkgroupsize-1 many unnecessary threads (Basically one more workgroup).
+	size_t nowg = Nrounded/sumKernelWGS;
 
 	unique_ptr<cl_float[]> sum_output(new cl_float[nowg]);
 	cl::Buffer buffer_sum_output = context.createBuffer(sizeof(cl_float)*nowg);
 
-	sumKernel(cl::NDRange(N), cl::NDRange(sumKernelWGS), buffer_C, SimpleCLLocalMemory<cl_float>(sumKernelWGS), buffer_sum_output);
+	sumKernel(cl::NDRange(Nrounded), cl::NDRange(sumKernelWGS), buffer_C, SimpleCLLocalMemory<cl_float>(sumKernelWGS), buffer_sum_output, (cl_int)N);
 
 	context.readBuffer(sum_output.get(), buffer_sum_output, sizeof(cl_float)*nowg);
  
 	cout << " result: " << endl;
-	for(int i=0;i<std::min((size_t)10,nowg);i++)
+	for(int i=0;i<std::min((size_t)10, nowg);i++)
 		cout << sum_output[i] << " ";
 	cout << "..." << endl;
 
@@ -73,6 +63,7 @@ int main()
 	for (int i=0; i<nowg; i++)
 		bigSum += sum_output[i];
 
+	cout << "Expected " << (3*N) << " got " << bigSum << endl;
 	assert(bigSum == 3*N);
 	cout << "Correct answer" << endl;
  
