@@ -17,6 +17,7 @@ class SimpleCLKernel;
 class SimpleCLContext
 {
 public:
+	cl::Device device;
 	cl::Context context;
 	cl::CommandQueue queue;
 	cl::Program program;
@@ -33,18 +34,30 @@ public:
 	bool isNull() const;
 };
 
+template<typename T>
+class SimpleCLLocalMemory
+{
+public:
+	size_t size;
+public:
+	SimpleCLLocalMemory(size_t _size);
+};
+
 class SimpleCLKernel
 {
 public:
+	cl::Device device;
 	cl::Kernel clkernel;
 	cl::CommandQueue queue;
 private:
-	SimpleCLKernel(cl::Kernel _clkernel, cl::CommandQueue _queue);
+	SimpleCLKernel(cl::Device _device, cl::Kernel _clkernel, cl::CommandQueue _queue);
 	void setArgs(int totalCount);
+	template<typename T, typename... Args> void setArgs(int totalCount, const SimpleCLLocalMemory<T>& arg, const Args&... args);
 	template<typename T, typename... Args> void setArgs(int totalCount, const T& arg, const Args&... args);
 public:
 	SimpleCLKernel() = default;
 	template<typename... Args> void operator()(const cl::NDRange& range, const Args&... args);
+	size_t getMaxWorkGroupSize() const;
 
 	friend SimpleCLContext;
 };

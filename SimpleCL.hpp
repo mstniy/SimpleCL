@@ -1,3 +1,9 @@
+template<typename T>
+SimpleCLLocalMemory<T>::SimpleCLLocalMemory(size_t _size):
+	size(_size)
+{
+}
+
 template<typename... Args>
 void SimpleCLKernel::operator()(const cl::NDRange& range, const Args&... args)
 {
@@ -9,6 +15,13 @@ void SimpleCLKernel::operator()(const cl::NDRange& range, const Args&... args)
 	err = queue.finish();
 	if (err != CL_SUCCESS)
 		throw std::runtime_error("cl::CommandQueue::finish failed with error code " + std::to_string(err));
+}
+
+template<typename T, typename... Args> 
+void SimpleCLKernel::setArgs(int totalCount, const SimpleCLLocalMemory<T>& arg, const Args&... args)
+{
+	clkernel.setArg(totalCount-sizeof...(args)-1, arg.size*sizeof(T), NULL);
+	setArgs(totalCount, args...);
 }
 
 template<typename T, typename... Args> 

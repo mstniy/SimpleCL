@@ -21,16 +21,30 @@ int main()
 	cl::Buffer buffer_B = context.createInitBuffer(sizeof(int)*10, B, SimpleCLReadOnly);
 	cl::Buffer buffer_C = context.createBuffer(sizeof(int)*10);
 
-	SimpleCLKernel kernel(context.createKernel("simple_add"));
+	SimpleCLKernel addKernel(context.createKernel("simple_add"));
+	cout << "addKernel max workgroupsize: " << addKernel.getMaxWorkGroupSize() << endl;
 
-	kernel(cl::NDRange(10), buffer_A, buffer_B, buffer_C);
+	addKernel(cl::NDRange(10), buffer_A, buffer_B, buffer_C);
 
 	context.readBuffer(C, buffer_C, sizeof(int)*10);
  
-	std::cout<<" result: \n";
-	for(int i=0;i<10;i++){
-		std::cout<<C[i]<<" ";
-	}
+	cout << " result: " << endl;
+	for(int i=0;i<10;i++)
+		cout << C[i] << " ";
+	cout << endl;
+
+	SimpleCLKernel sumKernel(context.createKernel("sum_reduce"));
+	size_t sumKernelMWGS = sumKernel.getMaxWorkGroupSize();
+	cout << "sumKernel max workgroupsize: " << sumKernelMWGS << endl;
+
+	sumKernel(cl::NDRange(10), buffer_C, SimpleCLLocalMemory<cl_float>(sumKernelMWGS), 10);
+
+	context.readBuffer(C, buffer_C, sizeof(int)*10);
+ 
+	cout << " result: " << endl;
+	for(int i=0;i<10;i++)
+		cout << C[i] << " ";
+	cout << endl;
  
 	return 0;
 }

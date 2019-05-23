@@ -33,7 +33,7 @@ SimpleCLContext::SimpleCLContext(const char* filename)
 		throw std::runtime_error("cl::Platform::getDevices failed with error code " + std::to_string(err));
 	if(all_devices.size()==0)
 		throw std::runtime_error("No devices found. Check OpenCL installation!");
-	cl::Device device(all_devices[0]);
+	device = all_devices[0];
 	std::cout<< "Using device: "<<device.getInfo<CL_DEVICE_NAME>()<<std::endl;
 	 
 	context = cl::Context({device}, NULL, NULL, NULL, &err);
@@ -103,7 +103,7 @@ SimpleCLKernel SimpleCLContext::createKernel(const char* kernelName)
 	cl::Kernel kernel(program, kernelName, &err);
 	if (err != CL_SUCCESS)
 		throw std::runtime_error("cl::Kernel constructor failed with error code " + std::to_string(err));
-	return SimpleCLKernel(kernel, queue);
+	return SimpleCLKernel(device, kernel, queue);
 }
 
 bool SimpleCLContext::isNull() const
@@ -111,7 +111,8 @@ bool SimpleCLContext::isNull() const
 	return context() == NULL;
 }
 
-SimpleCLKernel::SimpleCLKernel(cl::Kernel _clkernel, cl::CommandQueue _queue):
+SimpleCLKernel::SimpleCLKernel(cl::Device _device, cl::Kernel _clkernel, cl::CommandQueue _queue):
+	device(_device),
 	clkernel(_clkernel),
 	queue(_queue)
 {
@@ -119,4 +120,14 @@ SimpleCLKernel::SimpleCLKernel(cl::Kernel _clkernel, cl::CommandQueue _queue):
 
 void SimpleCLKernel::setArgs(int totalCount)
 {
+}
+
+size_t SimpleCLKernel::getMaxWorkGroupSize() const
+{
+	size_t size;
+	cl_int err;
+	err = clkernel.getWorkGroupInfo(device, CL_KERNEL_WORK_GROUP_SIZE, &size);
+	if (err != CL_SUCCESS)
+		throw std::runtime_error("cl::Kernel::getWorkGroupInfo failed with error code " + std::to_string(err));
+	return size;
 }
