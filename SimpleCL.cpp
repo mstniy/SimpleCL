@@ -59,44 +59,6 @@ SimpleCLContext::SimpleCLContext(const char* filename)
 		throw std::runtime_error(std::runtime_error("Error building: " + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)));
 }
 
-cl::Buffer SimpleCLContext::createBuffer(size_t size, SimpleCLMemType type)
-{
-	cl_int err;
-	cl_mem_flags flags=smt2cmf(type);
-	cl::Buffer buffer(context, flags, size, NULL, &err);
-	if (err != CL_SUCCESS)
-		throw std::runtime_error("cl::Buffer constructor failed with error code " + std::to_string(err));
-
-	return buffer;
-}
-
-cl::Buffer SimpleCLContext::createInitBuffer(size_t size, void* host_ptr, SimpleCLMemType type)
-{
-	cl_int err;
-	cl_mem_flags flags=smt2cmf(type) | CL_MEM_COPY_HOST_PTR;
-	cl::Buffer buffer(context, flags, size, host_ptr, &err);
-	if (err != CL_SUCCESS)
-		throw std::runtime_error("cl::Buffer constructor failed with error code " + std::to_string(err));
-
-	return buffer;
-}
-
-void SimpleCLContext::readBuffer(void* host_ptr, const cl::Buffer& buffer, size_t size)
-{
-	cl_int err;
-	err = queue.enqueueReadBuffer(buffer, CL_TRUE, 0, size, host_ptr);
-	if (err != CL_SUCCESS)
-		throw std::runtime_error("cl::CommandQueue::enqueueReadBuffer failed with error code " + std::to_string(err));
-}
-
-void SimpleCLContext::writeBuffer(const cl::Buffer& buffer, void* host_ptr, size_t size)
-{
-	cl_int err;
-	err = queue.enqueueWriteBuffer(buffer, CL_TRUE, 0, size, host_ptr);
-	if (err != CL_SUCCESS)
-		throw std::runtime_error("cl::CommandQueue::enqueueWriteBuffer failed with error code " + std::to_string(err));
-}
-
 SimpleCLKernel SimpleCLContext::createKernel(const char* kernelName)
 {
 	cl_int err;

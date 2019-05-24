@@ -20,7 +20,7 @@ int main()
 
 	assert(context.isNull() == false);
   
-	cl::Buffer buffer_A = context.createInitBuffer(sizeof(cl_float)*N, A.get(), SimpleCLReadOnly);
+	SimpleCLBuffer<cl_float> buffer_A = context.createInitBuffer<cl_float>(N, A.get(), SimpleCLReadOnly);
 
 	SimpleCLKernel sumKernel(context.createKernel("sum_reduce"));
 	size_t sumKernelWGS = std::min(N, sumKernel.getMaxWorkGroupSize());
@@ -29,11 +29,11 @@ int main()
 	size_t nowg = Nrounded/sumKernelWGS;
 
 	unique_ptr<cl_float[]> sum_output(new cl_float[nowg]);
-	cl::Buffer buffer_sum_output = context.createBuffer(sizeof(cl_float)*nowg);
+	SimpleCLBuffer<cl_float> buffer_sum_output = context.createBuffer<cl_float>(nowg);
 
 	sumKernel(cl::NDRange(Nrounded), cl::NDRange(sumKernelWGS), buffer_A, SimpleCLLocalMemory<cl_float>(sumKernelWGS), buffer_sum_output, (cl_int)N);
 
-	context.readBuffer(sum_output.get(), buffer_sum_output, sizeof(cl_float)*nowg);
+	buffer_sum_output.read(sum_output.get(), nowg);
  
 	cout << " result: " << endl;
 	for(size_t i=0;i<std::min((size_t)10, nowg);i++)

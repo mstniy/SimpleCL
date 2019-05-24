@@ -26,15 +26,15 @@ int main()
 
 	assert(context.isNull() == false);
   
-	cl::Buffer buffer_A = context.createInitBuffer(sizeof(cl_float)*N, A.get(), SimpleCLReadOnly);
-	cl::Buffer buffer_B = context.createInitBuffer(sizeof(cl_float)*N, B.get(), SimpleCLReadOnly);
-	cl::Buffer buffer_C = context.createBuffer(sizeof(cl_float)*N);
+	SimpleCLBuffer<cl_float> buffer_A = context.createInitBuffer<cl_float>(N, A.get(), SimpleCLReadOnly);
+	SimpleCLBuffer<cl_float> buffer_B = context.createInitBuffer<cl_float>(N, B.get(), SimpleCLReadOnly);
+	SimpleCLBuffer<cl_float> buffer_C = context.createBuffer<cl_float>(N);
 
 	SimpleCLKernel addKernel(context.createKernel("simple_add"));
 
 	addKernel(cl::NDRange(N), cl::NullRange, buffer_A, buffer_B, buffer_C);
 
-	context.readBuffer(C.get(), buffer_C, sizeof(cl_float)*N);
+	buffer_C.read(C.get(), N);
  
 	cout << " result: " << endl;
 	for(size_t i=0; i<std::min((size_t)10, N); i++)

@@ -14,6 +14,9 @@ enum SimpleCLMemType
 
 class SimpleCLKernel;
 
+template<typename T>
+class SimpleCLBuffer;
+
 class SimpleCLContext
 {
 public:
@@ -26,13 +29,32 @@ private:
 public:
 	SimpleCLContext() = default;
 	SimpleCLContext(const char* filename);
-	cl::Buffer createBuffer(size_t size, SimpleCLMemType type = SimpleCLReadWrite);
-	cl::Buffer createInitBuffer(size_t size, void* host_ptr, SimpleCLMemType type = SimpleCLReadWrite);
-	void readBuffer(void* host_ptr, const cl::Buffer& buffer, size_t size);
-	void writeBuffer(const cl::Buffer& buffer, void* host_ptr, size_t size);
+	template<typename T>
+	SimpleCLBuffer<T> createBuffer(size_t length, SimpleCLMemType type = SimpleCLReadWrite);
+	template<typename T>
+	SimpleCLBuffer<T> createInitBuffer(size_t length, void* host_ptr, SimpleCLMemType type = SimpleCLReadWrite);
 	SimpleCLKernel createKernel(const char* kernelName);
 	bool isNull() const;
 	void finish();
+};
+
+template<typename T>
+class SimpleCLBuffer
+{
+public:
+	bool mapped=false;
+	cl::CommandQueue queue;
+	cl::Buffer buffer;
+	size_t allLength;
+public:
+	SimpleCLBuffer() = default;
+private:
+	SimpleCLBuffer(cl::CommandQueue _queue, cl::Buffer _buffer, size_t _allLength);
+public:
+	void read(void* host_ptr, size_t length);
+	void write(const void* host_ptr, size_t length);
+
+	friend SimpleCLContext;
 };
 
 template<typename T>
@@ -54,6 +76,7 @@ private:
 	SimpleCLKernel(cl::Device _device, cl::Kernel _clkernel, cl::CommandQueue _queue);
 	void setArgs(int totalCount);
 	template<typename T, typename... Args> void setArgs(int totalCount, const SimpleCLLocalMemory<T>& arg, const Args&... args);
+	template<typename T, typename... Args> void setArgs(int totalCount, const SimpleCLBuffer<T>& arg, const Args&... args);
 	template<typename T, typename... Args> void setArgs(int totalCount, const T& arg, const Args&... args);
 public:
 	SimpleCLKernel() = default;
