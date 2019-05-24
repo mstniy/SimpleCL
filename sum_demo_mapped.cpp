@@ -33,7 +33,7 @@ int main()
 	int Nrounded = N%sumKernelWGS == 0 ? N : N+sumKernelWGS-(N%sumKernelWGS); // We might create at most maxworkgroupsize-1 many unnecessary threads (Basically one more workgroup).
 	size_t nowg = Nrounded/sumKernelWGS;
 
-	SimpleCLBuffer<cl_float> buffer_sum_output = context.createBuffer<cl_float>(nowg, SimpleCLReadWrite|SimpleCLHostAlloc);
+	SimpleCLBuffer<cl_float> buffer_sum_output = context.createBuffer<cl_float>(nowg, SimpleCLWrite|SimpleCLHostAlloc);
 
 	sumKernel(cl::NDRange(Nrounded), cl::NDRange(sumKernelWGS), buffer_A, SimpleCLLocalMemory<cl_float>(sumKernelWGS), buffer_sum_output, (cl_int)N);
 

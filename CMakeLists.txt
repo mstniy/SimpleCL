@@ -15,3 +15,6 @@ target_link_libraries(sum_demo OpenCL)
 
 add_executable(sum_demo_mapped sum_demo_mapped.cpp SimpleCL.cpp)
 target_link_libraries(sum_demo_mapped OpenCL)
+
+add_executable(speed_test speed_test.cpp SimpleCL.cpp)
+target_link_libraries(speed_test OpenCL)
