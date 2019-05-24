@@ -37,7 +37,7 @@ int main()
 
 	sumKernel(cl::NDRange(Nrounded), cl::NDRange(sumKernelWGS), buffer_A, SimpleCLLocalMemory<cl_float>(sumKernelWGS), buffer_sum_output, (cl_int)N);
 
-	cl_float* sum_output = buffer_sum_output.map();
+	cl_float* sum_output = buffer_sum_output.map(SimpleCLRead);
  
 	cout << " result: " << endl;
 	for(size_t i=0;i<std::min((size_t)10, nowg);i++)
