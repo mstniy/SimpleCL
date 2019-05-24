@@ -45,6 +45,7 @@ public:
 	cl::CommandQueue queue;
 	cl::Buffer buffer;
 	size_t allLength;
+	size_t mapCount=0;
 public:
 	SimpleCLBuffer() = default;
 private:
@@ -63,9 +64,9 @@ template<typename T>
 class SimpleCLLocalMemory
 {
 public:
-	size_t size;
+	size_t length;
 public:
-	SimpleCLLocalMemory(size_t _size);
+	SimpleCLLocalMemory(size_t _length);
 };
 
 class SimpleCLKernel

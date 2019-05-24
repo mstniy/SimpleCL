@@ -1,6 +1,6 @@
 template<typename T>
-SimpleCLLocalMemory<T>::SimpleCLLocalMemory(size_t _size):
-	size(_size)
+SimpleCLLocalMemory<T>::SimpleCLLocalMemory(size_t _length):
+	length(_length)
 {
 }
 
@@ -39,6 +39,8 @@ SimpleCLBuffer<T>::SimpleCLBuffer(cl::CommandQueue _queue, cl::Buffer _buffer, s
 template<typename T>
 void SimpleCLBuffer<T>::read(void* host_ptr, size_t length)
 {
+	if (mapCount != 0)
+		throw std::runtime_error("Cannot enqueueReadBuffer on mapped buffer");
 	cl_int err;
 	err = queue.enqueueReadBuffer(buffer, CL_TRUE, 0, length*sizeof(T), host_ptr);
 	if (err != CL_SUCCESS)
@@ -48,6 +50,8 @@ void SimpleCLBuffer<T>::read(void* host_ptr, size_t length)
 template<typename T>
 void SimpleCLBuffer<T>::write(const void* host_ptr, size_t length)
 {
+	if (mapCount != 0)
+		throw std::runtime_error("Cannot enqueueWriteBuffer on mapped buffer");
 	cl_int err;
 	err = queue.enqueueWriteBuffer(buffer, CL_TRUE, 0, length*sizeof(T), host_ptr);
 	if (err != CL_SUCCESS)
@@ -66,6 +70,7 @@ T* SimpleCLBuffer<T>::map(size_t length, SimpleCLMemType type)
 	void* ptr = queue.enqueueMapBuffer(buffer, CL_TRUE, flags, 0, length*sizeof(T), NULL, NULL, &err);
 	if (err != CL_SUCCESS)
 		throw std::runtime_error("cl::CommandQueue::enqueueMapBuffer failed with error code " + std::to_string(err));
+	mapCount++;
 	return (T*)ptr;
 }
 
@@ -78,11 +83,14 @@ T* SimpleCLBuffer<T>::map(SimpleCLMemType type)
 template<typename T>
 void SimpleCLBuffer<T>::unmap(T*& ptr)
 {
+	if (mapCount == 0)
+		throw std::runtime_error("Buffer is already unmapped");
 	cl_int err;
 	err = queue.enqueueUnmapMemObject(buffer, (void*)ptr);
 	if (err != CL_SUCCESS)
 		throw std::runtime_error("cl::CommandQueue::enqueueUnmapMemObject failed with error code " + std::to_string(err));
 	ptr = nullptr;
+	mapCount--;
 }
 
 template<typename... Args>
@@ -108,13 +116,15 @@ void SimpleCLKernel::operator()(const cl::NDRange& globalRange, const cl::NDRang
 template<typename T, typename... Args> 
 void SimpleCLKernel::setArgs(int totalCount, const SimpleCLLocalMemory<T>& arg, const Args&... args)
 {
-	clkernel.setArg(totalCount-sizeof...(args)-1, arg.size*sizeof(T), NULL);
+	clkernel.setArg(totalCount-sizeof...(args)-1, arg.length*sizeof(T), NULL);
 	setArgs(totalCount, args...);
 }
 
 template<typename T, typename... Args>
 void SimpleCLKernel::setArgs(int totalCount, const SimpleCLBuffer<T>& arg, const Args&... args)
 {
+	if (arg.mapCount != 0)
+		throw std::runtime_error("Buffers must be unmapped before they are passed to a kernel");
 	clkernel.setArg(totalCount-sizeof...(args)-1, arg.buffer);
 	setArgs(totalCount, args...);
 }
