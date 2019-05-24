@@ -92,7 +92,7 @@ SimpleCLKernel::SimpleCLKernel(cl::Device _device, cl::Kernel _clkernel, cl::Com
 {
 }
 
-void SimpleCLKernel::setArgs(int totalCount)
+void SimpleCLKernel::setArgs(int /*totalCount*/)
 {
 }
 

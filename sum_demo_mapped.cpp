@@ -20,7 +20,7 @@ int main()
   
 	SimpleCLBuffer<cl_float> buffer_A = context.createBuffer<cl_float>(N, SimpleCLRead|SimpleCLHostAlloc);
 
-	volatile cl_float* A = buffer_A.map();
+	cl_float* A = buffer_A.map();
 
 	for (size_t i=0; i<N; i++)
 		A[i] = M;
@@ -37,7 +37,7 @@ int main()
 
 	sumKernel(cl::NDRange(Nrounded), cl::NDRange(sumKernelWGS), buffer_A, SimpleCLLocalMemory<cl_float>(sumKernelWGS), buffer_sum_output, (cl_int)N);
 
-	volatile cl_float* sum_output = buffer_sum_output.map();
+	cl_float* sum_output = buffer_sum_output.map();
  
 	cout << " result: " << endl;
 	for(size_t i=0;i<std::min((size_t)10, nowg);i++)

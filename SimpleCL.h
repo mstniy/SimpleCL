@@ -52,10 +52,9 @@ private:
 public:
 	void read(void* host_ptr, size_t length);
 	void write(const void* host_ptr, size_t length);
-	// We use volatile pointers for mapped memory, because it is memory mapped I/O.
-	volatile T* map(size_t length, SimpleCLMemType type = SimpleCLReadWrite);
-	volatile T* map(SimpleCLMemType type = SimpleCLReadWrite); // This overload maps the entire buffer
-	void unmap(volatile T*& ptr);
+	T* map(size_t length, SimpleCLMemType type = SimpleCLReadWrite);
+	T* map(SimpleCLMemType type = SimpleCLReadWrite); // This overload maps the entire buffer
+	void unmap(T*& ptr);
 
 	friend SimpleCLContext;
 };
