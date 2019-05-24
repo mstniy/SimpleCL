@@ -93,6 +93,12 @@ void SimpleCLBuffer<T>::unmap(T*& ptr)
 	mapCount--;
 }
 
+template<typename T>
+size_t SimpleCLBuffer<T>::length() const
+{
+	return allLength;
+}
+
 template<typename... Args>
 void SimpleCLKernel::runAsync(const cl::NDRange& globalRange, const cl::NDRange& localRange, const Args&... args)
 {

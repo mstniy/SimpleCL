@@ -56,6 +56,7 @@ public:
 	T* map(size_t length, SimpleCLMemType type = SimpleCLReadWrite);
 	T* map(SimpleCLMemType type = SimpleCLReadWrite); // This overload maps the entire buffer
 	void unmap(T*& ptr);
+	size_t length() const;
 
 	friend SimpleCLContext;
 };
