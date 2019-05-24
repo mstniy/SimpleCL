@@ -2,8 +2,6 @@
 #define SIMPLECL_H
 
 #include <CL/cl.hpp>
-#include <string>
-#include <tuple>
 
 typedef int SimpleCLMemType;
 
@@ -39,13 +37,15 @@ public:
 };
 
 template<typename T>
+class SimpleCLMappedBuffer;
+
+template<typename T>
 class SimpleCLBuffer
 {
 public:
 	cl::CommandQueue queue;
 	cl::Buffer buffer;
-	size_t allLength;
-	size_t mapCount=0;
+	size_t allLength = 0;
 public:
 	SimpleCLBuffer() = default;
 private:
@@ -53,12 +53,38 @@ private:
 public:
 	void read(void* host_ptr, size_t length);
 	void write(const void* host_ptr, size_t length);
-	T* map(size_t length, SimpleCLMemType type = SimpleCLReadWrite);
-	T* map(SimpleCLMemType type = SimpleCLReadWrite); // This overload maps the entire buffer
-	void unmap(T*& ptr);
+	SimpleCLMappedBuffer<T> map(size_t length, SimpleCLMemType type = SimpleCLReadWrite);
+	SimpleCLMappedBuffer<T> map(SimpleCLMemType type = SimpleCLReadWrite); // This overload maps the entire buffer
 	size_t length() const;
+	size_t mapCount() const;
 
 	friend SimpleCLContext;
+};
+
+template<typename T>
+class SimpleCLMappedBuffer
+{
+public:
+	cl::CommandQueue queue;
+	cl::Buffer buffer;
+	T* map = nullptr;
+public:
+	SimpleCLMappedBuffer() = default;
+	SimpleCLMappedBuffer(const SimpleCLMappedBuffer& o) = delete;
+	SimpleCLMappedBuffer(SimpleCLMappedBuffer&& o);
+	SimpleCLMappedBuffer& operator=(const SimpleCLMappedBuffer& o) = delete;
+	SimpleCLMappedBuffer& operator=(SimpleCLMappedBuffer&& o);
+	~SimpleCLMappedBuffer();
+private:
+	SimpleCLMappedBuffer(cl::CommandQueue _queue, cl::Buffer _buffer, T* _map);
+public:
+	T& operator[](size_t i);
+	const T& operator[](size_t i) const;
+	T* get();
+	const T* get() const;
+	void unmap();
+
+	friend SimpleCLBuffer<T>;
 };
 
 template<typename T>

@@ -20,12 +20,12 @@ int main()
   
 	SimpleCLBuffer<cl_float> buffer_A = context.createBuffer<cl_float>(N, SimpleCLRead|SimpleCLHostAlloc);
 
-	cl_float* A = buffer_A.map();
+	SimpleCLMappedBuffer<cl_float> A = buffer_A.map();
 
 	for (size_t i=0; i<N; i++)
 		A[i] = M;
 
-	buffer_A.unmap(A);
+	A.unmap();
 
 	SimpleCLKernel sumKernel(context.createKernel("sum_reduce"));
 	size_t sumKernelWGS = std::min(N, sumKernel.getMaxWorkGroupSize());
@@ -37,7 +37,7 @@ int main()
 
 	sumKernel(cl::NDRange(Nrounded), cl::NDRange(sumKernelWGS), buffer_A, SimpleCLLocalMemory<cl_float>(sumKernelWGS), buffer_sum_output, (cl_int)N);
 
-	cl_float* sum_output = buffer_sum_output.map(SimpleCLRead);
+	SimpleCLMappedBuffer<cl_float> sum_output = buffer_sum_output.map(SimpleCLRead);
  
 	cout << " result: " << endl;
 	for(size_t i=0;i<std::min((size_t)10, nowg);i++)

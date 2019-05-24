@@ -39,7 +39,7 @@ SimpleCLBuffer<T>::SimpleCLBuffer(cl::CommandQueue _queue, cl::Buffer _buffer, s
 template<typename T>
 void SimpleCLBuffer<T>::read(void* host_ptr, size_t length)
 {
-	if (mapCount != 0)
+	if (mapCount() != 0)
 		throw std::runtime_error("Cannot enqueueReadBuffer on mapped buffer");
 	cl_int err;
 	err = queue.enqueueReadBuffer(buffer, CL_TRUE, 0, length*sizeof(T), host_ptr);
@@ -50,7 +50,7 @@ void SimpleCLBuffer<T>::read(void* host_ptr, size_t length)
 template<typename T>
 void SimpleCLBuffer<T>::write(const void* host_ptr, size_t length)
 {
-	if (mapCount != 0)
+	if (mapCount() != 0)
 		throw std::runtime_error("Cannot enqueueWriteBuffer on mapped buffer");
 	cl_int err;
 	err = queue.enqueueWriteBuffer(buffer, CL_TRUE, 0, length*sizeof(T), host_ptr);
@@ -59,7 +59,17 @@ void SimpleCLBuffer<T>::write(const void* host_ptr, size_t length)
 }
 
 template<typename T>
-T* SimpleCLBuffer<T>::map(size_t length, SimpleCLMemType type)
+size_t SimpleCLBuffer<T>::mapCount() const
+{
+	cl_int err;
+	size_t res = buffer.getInfo<CL_MEM_MAP_COUNT>(&err);
+	if (err != CL_SUCCESS)
+		throw std::runtime_error("cl::Buffer::getInfo failed with error code " + std::to_string(err));
+	return res;
+}
+
+template<typename T>
+SimpleCLMappedBuffer<T> SimpleCLBuffer<T>::map(size_t length, SimpleCLMemType type)
 {
 	cl_map_flags flags=0;
 	if (type & SimpleCLRead)
@@ -70,33 +80,88 @@ T* SimpleCLBuffer<T>::map(size_t length, SimpleCLMemType type)
 	void* ptr = queue.enqueueMapBuffer(buffer, CL_TRUE, flags, 0, length*sizeof(T), NULL, NULL, &err);
 	if (err != CL_SUCCESS)
 		throw std::runtime_error("cl::CommandQueue::enqueueMapBuffer failed with error code " + std::to_string(err));
-	mapCount++;
-	return (T*)ptr;
+	return SimpleCLMappedBuffer<T>(queue, buffer, (T*)ptr);
 }
 
 template<typename T>
-T* SimpleCLBuffer<T>::map(SimpleCLMemType type)
+SimpleCLMappedBuffer<T> SimpleCLBuffer<T>::map(SimpleCLMemType type)
 {
 	return map(allLength, type);
 }
 
 template<typename T>
-void SimpleCLBuffer<T>::unmap(T*& ptr)
+T& SimpleCLMappedBuffer<T>::operator[](size_t i)
 {
-	if (mapCount == 0)
-		throw std::runtime_error("Buffer is already unmapped");
-	cl_int err;
-	err = queue.enqueueUnmapMemObject(buffer, (void*)ptr);
-	if (err != CL_SUCCESS)
-		throw std::runtime_error("cl::CommandQueue::enqueueUnmapMemObject failed with error code " + std::to_string(err));
-	ptr = nullptr;
-	mapCount--;
+	return map[i];
+}
+
+template<typename T>
+const T& SimpleCLMappedBuffer<T>::operator[](size_t i) const
+{
+	return map[i];
+}
+
+template<typename T>
+T* SimpleCLMappedBuffer<T>::get()
+{
+	return map;
+}
+
+template<typename T>
+const T* SimpleCLMappedBuffer<T>::get() const
+{
+	return map;
 }
 
 template<typename T>
 size_t SimpleCLBuffer<T>::length() const
 {
 	return allLength;
+}
+
+template<typename T>
+SimpleCLMappedBuffer<T>::SimpleCLMappedBuffer(cl::CommandQueue _queue, cl::Buffer _buffer, T* _map):
+	queue(_queue),
+	buffer(_buffer),
+	map(_map)
+{
+}
+
+template<typename T>
+SimpleCLMappedBuffer<T>::SimpleCLMappedBuffer(SimpleCLMappedBuffer&& o):
+	queue(o.queue),
+	buffer(o.buffer),
+	map(o.map)
+{
+	o.map = nullptr;
+}
+
+template<typename T>
+SimpleCLMappedBuffer<T>& SimpleCLMappedBuffer<T>::operator=(SimpleCLMappedBuffer&& o)
+{
+	queue = o.queue;
+	buffer = o.buffer;
+	map = o.map;
+	o.map = nullptr;
+	return (*this);
+}
+
+template<typename T>
+SimpleCLMappedBuffer<T>::~SimpleCLMappedBuffer()
+{
+	unmap();
+}
+
+template<typename T>
+void SimpleCLMappedBuffer<T>::unmap()
+{
+	if (map == nullptr) // Already empty
+		return ;
+	cl_int err;
+	err = queue.enqueueUnmapMemObject(buffer, (void*)map);
+	if (err != CL_SUCCESS)
+		throw std::runtime_error("cl::CommandQueue::enqueueUnmapMemObject failed with error code " + std::to_string(err));
+	map = nullptr;
 }
 
 template<typename... Args>
@@ -129,7 +194,7 @@ void SimpleCLKernel::setArgs(int totalCount, const SimpleCLLocalMemory<T>& arg, 
 template<typename T, typename... Args>
 void SimpleCLKernel::setArgs(int totalCount, const SimpleCLBuffer<T>& arg, const Args&... args)
 {
-	if (arg.mapCount != 0)
+	if (arg.mapCount() != 0)
 		throw std::runtime_error("Buffers must be unmapped before they are passed to a kernel");
 	clkernel.setArg(totalCount-sizeof...(args)-1, arg.buffer);
 	setArgs(totalCount, args...);
