@@ -11,7 +11,7 @@ int main()
 	const size_t N = 1000000;
 	const int M = 3;
 	unique_ptr<cl_float[]> A(new cl_float[N]);
-	for (int i=0; i<N; i++)
+	for (size_t i=0; i<N; i++)
 		A[i] = M;
 
 	assert(SimpleCLContext().isNull());
@@ -36,12 +36,12 @@ int main()
 	context.readBuffer(sum_output.get(), buffer_sum_output, sizeof(cl_float)*nowg);
  
 	cout << " result: " << endl;
-	for(int i=0;i<std::min((size_t)10, nowg);i++)
+	for(size_t i=0;i<std::min((size_t)10, nowg);i++)
 		cout << sum_output[i] << " ";
 	cout << "..." << endl;
 
 	int bigSum=0;
-	for (int i=0; i<nowg; i++)
+	for (size_t i=0; i<nowg; i++)
 		bigSum += sum_output[i];
 
 	cout << "Expected " << (3*N) << " got " << bigSum << endl;

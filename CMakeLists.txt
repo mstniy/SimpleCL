@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(simplecl_demo)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 set (CMAKE_CXX_STANDARD 11)
 
 include_directories(SYSTEM "/usr/local/cuda-10.1/include")

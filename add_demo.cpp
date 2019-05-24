@@ -1,5 +1,6 @@
 #include <iostream>
 #include <assert.h>
+#include <math.h>
 #include <memory>
 
 #include "SimpleCL.h"
@@ -13,10 +14,10 @@ int main()
 	unique_ptr<cl_float[]> A(new cl_float[N]);
 	unique_ptr<cl_float[]> B(new cl_float[N]);
 	unique_ptr<cl_float[]> C(new cl_float[N]);
-	for (int i=0; i<N; i++)
+	for (size_t i=0; i<N; i++)
 	{
 		A[i] = i;
-		B[i] = M-i;
+		B[i] = M-int(i);
 	}
 
 	assert(SimpleCLContext().isNull());
@@ -36,12 +37,12 @@ int main()
 	context.readBuffer(C.get(), buffer_C, sizeof(cl_float)*N);
  
 	cout << " result: " << endl;
-	for(int i=0; i<std::min((size_t)10, N); i++)
+	for(size_t i=0; i<std::min((size_t)10, N); i++)
 		cout << C[i] << " ";
 	cout << "..." << endl;
 
-	for(int i=0; i<N; i++)
-		assert(C[i] == M);
+	for(size_t i=0; i<N; i++)
+		assert(fabs(C[i]-M)<1e-6);
 
 	cout << "Correct answer" << endl;
 
