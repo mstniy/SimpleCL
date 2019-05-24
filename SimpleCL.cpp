@@ -28,7 +28,7 @@ SimpleCLContext::SimpleCLContext(const char* filename)
 	if(all_platforms.size()==0)
 		throw std::runtime_error("No platforms found. Check OpenCL installation!");
 	cl::Platform platform(all_platforms[0]);
-	//std::cout << "Using platform: "<<platform.getInfo<CL_PLATFORM_NAME>()<<std::endl;
+	std::cout << "Using platform: "<<platform.getInfo<CL_PLATFORM_NAME>()<<std::endl;
 	 
 	//get default device of the default platform
 	std::vector<cl::Device> all_devices;
@@ -38,7 +38,7 @@ SimpleCLContext::SimpleCLContext(const char* filename)
 	if(all_devices.size()==0)
 		throw std::runtime_error("No devices found. Check OpenCL installation!");
 	device = all_devices[0];
-	//std::cout<< "Using device: "<<device.getInfo<CL_DEVICE_NAME>()<<std::endl;
+	std::cout<< "Using device: "<<device.getInfo<CL_DEVICE_NAME>()<<std::endl;
 	 
 	context = cl::Context({device}, NULL, NULL, NULL, &err);
 	if (err != CL_SUCCESS)

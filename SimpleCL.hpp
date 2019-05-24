@@ -53,7 +53,7 @@ void SimpleCLBuffer<T>::write(const void* host_ptr, size_t length)
 	if (mapCount() != 0)
 		throw std::runtime_error("Cannot enqueueWriteBuffer on mapped buffer");
 	cl_int err;
-	err = queue.enqueueWriteBuffer(buffer, CL_TRUE, 0, length*sizeof(T), host_ptr);
+	err = queue.enqueueWriteBuffer(buffer, CL_FALSE, 0, length*sizeof(T), host_ptr); // We can use non-blocking write here, since we're not using out-of-order command queues.
 	if (err != CL_SUCCESS)
 		throw std::runtime_error("cl::CommandQueue::enqueueWriteBuffer failed with error code " + std::to_string(err));
 }
