@@ -12,3 +12,6 @@ target_link_libraries(add_demo OpenCL)
 
 add_executable(sum_demo sum_demo.cpp SimpleCL.cpp)
 target_link_libraries(sum_demo OpenCL)
+
+add_executable(sum_demo_mapped sum_demo_mapped.cpp SimpleCL.cpp)
+target_link_libraries(sum_demo_mapped OpenCL)

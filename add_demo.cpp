@@ -26,8 +26,8 @@ int main()
 
 	assert(context.isNull() == false);
   
-	SimpleCLBuffer<cl_float> buffer_A = context.createInitBuffer<cl_float>(N, A.get(), SimpleCLReadOnly);
-	SimpleCLBuffer<cl_float> buffer_B = context.createInitBuffer<cl_float>(N, B.get(), SimpleCLReadOnly);
+	SimpleCLBuffer<cl_float> buffer_A = context.createInitBuffer<cl_float>(N, A.get(), SimpleCLRead);
+	SimpleCLBuffer<cl_float> buffer_B = context.createInitBuffer<cl_float>(N, B.get(), SimpleCLRead);
 	SimpleCLBuffer<cl_float> buffer_C = context.createBuffer<cl_float>(N);
 
 	SimpleCLKernel addKernel(context.createKernel("simple_add"));

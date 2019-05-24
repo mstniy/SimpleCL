@@ -39,8 +39,6 @@ SimpleCLBuffer<T>::SimpleCLBuffer(cl::CommandQueue _queue, cl::Buffer _buffer, s
 template<typename T>
 void SimpleCLBuffer<T>::read(void* host_ptr, size_t length)
 {
-	if (mapped)
-		throw std::runtime_error("Cannot read from mapped buffer");
 	cl_int err;
 	err = queue.enqueueReadBuffer(buffer, CL_TRUE, 0, length*sizeof(T), host_ptr);
 	if (err != CL_SUCCESS)
@@ -50,12 +48,41 @@ void SimpleCLBuffer<T>::read(void* host_ptr, size_t length)
 template<typename T>
 void SimpleCLBuffer<T>::write(const void* host_ptr, size_t length)
 {
-	if (mapped)
-		throw std::runtime_error("Cannot write to mapped buffer");
 	cl_int err;
 	err = queue.enqueueWriteBuffer(buffer, CL_TRUE, 0, length*sizeof(T), host_ptr);
 	if (err != CL_SUCCESS)
 		throw std::runtime_error("cl::CommandQueue::enqueueWriteBuffer failed with error code " + std::to_string(err));
+}
+
+template<typename T>
+volatile T* SimpleCLBuffer<T>::map(size_t length, SimpleCLMemType type)
+{
+	cl_map_flags flags=0;
+	if (type & SimpleCLRead)
+		flags |= CL_MAP_READ;
+	if (type & SimpleCLWrite)
+		flags |= CL_MAP_WRITE;
+	cl_int err;
+	void* ptr = queue.enqueueMapBuffer(buffer, CL_TRUE, flags, 0, length*sizeof(T), NULL, NULL, &err);
+	if (err != CL_SUCCESS)
+		throw std::runtime_error("cl::CommandQueue::enqueueMapBuffer failed with error code " + std::to_string(err));
+	return (volatile T*)ptr;
+}
+
+template<typename T>
+volatile T* SimpleCLBuffer<T>::map(SimpleCLMemType type)
+{
+	return map(allLength, type);
+}
+
+template<typename T>
+void SimpleCLBuffer<T>::unmap(volatile T*& ptr)
+{
+	cl_int err;
+	err = queue.enqueueUnmapMemObject(buffer, (void*)ptr);
+	if (err != CL_SUCCESS)
+		throw std::runtime_error("cl::CommandQueue::enqueueUnmapMemObject failed with error code " + std::to_string(err));
+	ptr = nullptr;
 }
 
 template<typename... Args>

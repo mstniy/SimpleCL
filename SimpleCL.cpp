@@ -6,12 +6,16 @@
 
 cl_mem_flags SimpleCLContext::smt2cmf(SimpleCLMemType type)
 {
-	if (type == SimpleCLReadOnly)
-		return CL_MEM_READ_ONLY;
-	else if (type == SimpleCLWriteOnly)
-		return CL_MEM_WRITE_ONLY;
-	else if (type == SimpleCLReadWrite)
-		return CL_MEM_READ_WRITE;
+	cl_mem_flags flags=0;
+	if ((type & SimpleCLRead) && (type&SimpleCLWrite)==0)
+		flags = CL_MEM_READ_ONLY;
+	else if ((type & SimpleCLRead)==0 && (type&SimpleCLWrite))
+		flags = CL_MEM_WRITE_ONLY;
+	else if ((type & SimpleCLRead) && (type&SimpleCLWrite))
+		flags = CL_MEM_READ_WRITE;
+	if (type&SimpleCLHostAlloc)
+		flags |= CL_MEM_ALLOC_HOST_PTR;
+	return flags;
 }
 
 SimpleCLContext::SimpleCLContext(const char* filename)

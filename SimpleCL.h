@@ -5,12 +5,12 @@
 #include <string>
 #include <tuple>
 
-enum SimpleCLMemType
-{
-	SimpleCLReadOnly,
-	SimpleCLWriteOnly,
-	SimpleCLReadWrite
-};
+typedef int SimpleCLMemType;
+
+const SimpleCLMemType SimpleCLRead = 1;
+const SimpleCLMemType SimpleCLWrite = 2;
+const SimpleCLMemType SimpleCLReadWrite = 3;
+const SimpleCLMemType SimpleCLHostAlloc = 4;
 
 class SimpleCLKernel;
 
@@ -42,7 +42,6 @@ template<typename T>
 class SimpleCLBuffer
 {
 public:
-	bool mapped=false;
 	cl::CommandQueue queue;
 	cl::Buffer buffer;
 	size_t allLength;
@@ -53,6 +52,10 @@ private:
 public:
 	void read(void* host_ptr, size_t length);
 	void write(const void* host_ptr, size_t length);
+	// We use volatile pointers for mapped memory, because it is memory mapped I/O.
+	volatile T* map(size_t length, SimpleCLMemType type = SimpleCLReadWrite);
+	volatile T* map(SimpleCLMemType type = SimpleCLReadWrite); // This overload maps the entire buffer
+	void unmap(volatile T*& ptr);
 
 	friend SimpleCLContext;
 };
