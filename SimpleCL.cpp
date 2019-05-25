@@ -77,13 +77,13 @@ bool SimpleCLContext::isNull() const
 	return context() == NULL;
 }
 
-void SimpleCLContext::finish()
+/*void SimpleCLContext::finish()
 {
 	cl_int err;
 	err = queue.finish();
 	if (err != CL_SUCCESS)
 		throw std::runtime_error("cl::CommandQueue::finish failed with error code " + std::to_string(err));
-}
+}*/
 
 SimpleCLKernel::SimpleCLKernel(cl::Device _device, cl::Kernel _clkernel, cl::CommandQueue _queue):
 	device(_device),

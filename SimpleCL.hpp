@@ -165,23 +165,14 @@ void SimpleCLMappedBuffer<T>::unmap()
 }
 
 template<typename... Args>
-void SimpleCLKernel::runAsync(const cl::NDRange& globalRange, const cl::NDRange& localRange, const Args&... args)
+void SimpleCLKernel::operator()(const cl::NDRange& globalRange, const cl::NDRange& localRange, const Args&... args)
 {
 	cl_int err;
 	setArgs(sizeof...(args), args...);
 	err = queue.enqueueNDRangeKernel(clkernel, cl::NullRange, globalRange, localRange);
 	if (err != CL_SUCCESS)
 		throw std::runtime_error("cl::CommandQueue::enqueueNDRangeKernel failed with error code " + std::to_string(err));
-}
-
-template<typename... Args>
-void SimpleCLKernel::operator()(const cl::NDRange& globalRange, const cl::NDRange& localRange, const Args&... args)
-{
-	runAsync(globalRange, localRange, args...);
-	cl_int err;
-	err = queue.finish();
-	if (err != CL_SUCCESS)
-		throw std::runtime_error("cl::CommandQueue::finish failed with error code " + std::to_string(err));
+	// We do not need to wait for the kernel to finish here (queue.finish()). Because if one executes a kernel, one will later read its results, be it by SimpleCLBuffer::map or SimpleCLBuffer::read, and both of these operations will be pushed to the command queue, will means that they will wait until the kernel completes.
 }
 
 template<typename T, typename... Args> 

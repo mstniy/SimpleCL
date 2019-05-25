@@ -33,7 +33,7 @@ public:
 	SimpleCLBuffer<T> createInitBuffer(size_t length, void* host_ptr, SimpleCLMemType type = SimpleCLReadWrite);
 	SimpleCLKernel createKernel(const char* kernelName);
 	bool isNull() const;
-	void finish();
+	//void finish(); // One should not need to explicitly wait for the command queue to finish.
 };
 
 template<typename T>
@@ -110,7 +110,6 @@ private:
 	template<typename T, typename... Args> void setArgs(int totalCount, const T& arg, const Args&... args);
 public:
 	SimpleCLKernel() = default;
-	template<typename... Args> void runAsync(const cl::NDRange& globalRange, const cl::NDRange& localRange, const Args&... args);
 	template<typename... Args> void operator()(const cl::NDRange& globalRange, const cl::NDRange& localRange, const Args&... args);
 	size_t getMaxWorkGroupSize() const;
 
