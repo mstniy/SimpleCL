@@ -18,7 +18,7 @@ cl_mem_flags SimpleCLContext::smt2cmf(SimpleCLMemType type)
 	return flags;
 }
 
-SimpleCLContext::SimpleCLContext(const char* filename)
+SimpleCLContext::SimpleCLContext(const char* filename, const char* options)
 {
 	std::vector<cl::Platform> all_platforms;
 	cl_int err;
@@ -59,7 +59,7 @@ SimpleCLContext::SimpleCLContext(const char* filename)
 	program = cl::Program(context,sources, &err);
 	if (err != CL_SUCCESS)
 		throw std::runtime_error("cl::Program constructor failed with error code " + std::to_string(err));
-	if(program.build({device}) != CL_SUCCESS)
+	if(program.build({device}, options) != CL_SUCCESS)
 		throw std::runtime_error(std::runtime_error("Error building: " + program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)));
 }
 

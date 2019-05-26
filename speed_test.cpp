@@ -28,7 +28,7 @@ uint64_t bench_copy(size_t N)
 
 	for (int cycle=0; cycle<CYCLE_COUNT; cycle++)
 	{
-		for (int i=0; i<N; i++)
+		for (size_t i=0; i<N; i++)
 			arr[i] = rand()%256;
 
 		start = chrono::high_resolution_clock::now();
@@ -39,7 +39,7 @@ uint64_t bench_copy(size_t N)
 
 		buffer_output.read(output.get(), N);
 
-		for (int i=0; i<N; i++)
+		for (size_t i=0; i<N; i++)
 			assert(fabs(output[i]-arr[i]-1)<1e-6);
 
 		end = chrono::high_resolution_clock::now();
@@ -63,7 +63,7 @@ uint64_t bench_mapped(size_t N)
 
 	for (int cycle=0; cycle<CYCLE_COUNT; cycle++)
 	{
-		for (int i=0; i<N; i++)
+		for (size_t i=0; i<N; i++)
 			arr[i] = rand()%256;
 
 		start = chrono::high_resolution_clock::now();
@@ -75,7 +75,7 @@ uint64_t bench_mapped(size_t N)
 		kernel(cl::NDRange(N), cl::NullRange, buffer_A, buffer_output);
 
 		SimpleCLMappedBuffer<cl_float> output = buffer_output.map(SimpleCLRead);
-		for (int i=0; i<N; i++)
+		for (size_t i=0; i<N; i++)
 			assert(fabs(output[i]-arr[i]-1)<1e-4);
 		output.unmap();
 

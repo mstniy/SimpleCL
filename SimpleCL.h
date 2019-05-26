@@ -26,7 +26,7 @@ private:
 	static cl_mem_flags smt2cmf(SimpleCLMemType type);
 public:
 	SimpleCLContext() = default;
-	SimpleCLContext(const char* filename);
+	SimpleCLContext(const char* filename, const char* options = NULL);
 	template<typename T>
 	SimpleCLBuffer<T> createBuffer(size_t length, SimpleCLMemType type = SimpleCLReadWrite);
 	template<typename T>
