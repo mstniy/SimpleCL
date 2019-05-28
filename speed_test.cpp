@@ -13,14 +13,12 @@ using TimePoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
 
 const int CYCLE_COUNT = 1000;
 
-const char* deviceName = NULL;
- 
 uint64_t bench_copy(size_t N)
 {
 	unique_ptr<cl_float[]> arr(new cl_float[N]);
 	unique_ptr<cl_float[]> output(new cl_float[N]);
 
-	SimpleCLContext context("../speed_test.cl", NULL, deviceName);
+	SimpleCLContext context("../speed_test.cl");
 
 	SimpleCLKernel kernel(context.createKernel("increment"));
 	SimpleCLBuffer<cl_float> buffer_A = context.createBuffer<cl_float>(N, SimpleCLRead); // In a real application, we can alloate the buffers once and reuse them over and over again. So the buffer allocation aren't included in the measure the here.
@@ -55,7 +53,7 @@ uint64_t bench_mapped(size_t N)
 {
 	unique_ptr<cl_float[]> arr(new cl_float[N]);
 
-	SimpleCLContext context("../speed_test.cl", NULL, deviceName);
+	SimpleCLContext context("../speed_test.cl");
 
 	SimpleCLKernel kernel(context.createKernel("increment"));
 	SimpleCLBuffer<cl_float> buffer_A = context.createBuffer<cl_float>(N, SimpleCLRead|SimpleCLHostAlloc); // In a real application, we can alloate the buffers once and reuse them over and over again. So the buffer allocation aren't included in the measure the here.
@@ -88,23 +86,9 @@ uint64_t bench_mapped(size_t N)
 	return chrono::duration_cast<chrono::microseconds>(end-start).count();
 }
 
-void Usage()
-{
-	cerr << "Usage: speed_test [device name]" << endl;
-}
-
-int main(int argc, char* argv[])
+int main()
 {
 	srand(time(NULL));
-
-	if (argc == 2)
-		deviceName = argv[1];
-
-	if (argc > 2)
-	{
-		Usage();
-		return 1;
-	}
 
 	for (size_t N=1; N<1000000; N*=2)
 	{
