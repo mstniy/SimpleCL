@@ -18,7 +18,7 @@ cl_mem_flags SimpleCLContext::smt2cmf(SimpleCLMemType type)
 	return flags;
 }
 
-SimpleCLContext::SimpleCLContext(const char* filename, const char* options)
+SimpleCLContext::SimpleCLContext(const char* filename, const char* options, const char* deviceName)
 {
 	std::vector<cl::Platform> all_platforms;
 	cl_int err;
@@ -27,18 +27,47 @@ SimpleCLContext::SimpleCLContext(const char* filename, const char* options)
 		throw std::runtime_error("cl::Platform::get failed with error code " + std::to_string(err));
 	if(all_platforms.size()==0)
 		throw std::runtime_error("No platforms found. Check OpenCL installation!");
-	cl::Platform platform(all_platforms[0]);
-	std::cout << "Using platform: "<<platform.getInfo<CL_PLATFORM_NAME>()<<std::endl;
-	 
-	//get default device of the default platform
-	std::vector<cl::Device> all_devices;
-	err = platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
-	if (err != CL_SUCCESS)
-		throw std::runtime_error("cl::Platform::getDevices failed with error code " + std::to_string(err));
-	if(all_devices.size()==0)
-		throw std::runtime_error("No devices found. Check OpenCL installation!");
-	device = all_devices[0];
-	std::cout<< "Using device: "<<device.getInfo<CL_DEVICE_NAME>()<<std::endl;
+	if (deviceName == nullptr)
+	{
+		cl::Platform platform(all_platforms[0]);
+		std::cout << "Using platform: "<<platform.getInfo<CL_PLATFORM_NAME>()<<std::endl;
+		 
+		//get default device of the default platform
+		std::vector<cl::Device> all_devices;
+		err = platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+		if (err != CL_SUCCESS)
+			throw std::runtime_error("cl::Platform::getDevices failed with error code " + std::to_string(err));
+		if(all_devices.size()==0)
+			throw std::runtime_error("No devices found. Check OpenCL installation!");
+		device = all_devices[0];
+		std::cout<< "Using device: "<<device.getInfo<CL_DEVICE_NAME>()<<std::endl;
+	}
+	else
+	{
+		bool deviceFound = false;
+		for (cl::Platform& platform : all_platforms)
+		{
+			std::vector<cl::Device> devices;
+			err = platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+			if (err != CL_SUCCESS)
+				throw std::runtime_error("cl::Platform::getDevices failed with error code " + std::to_string(err));
+			for (cl::Device& curDevice : devices)
+			{
+				if (curDevice.getInfo<CL_DEVICE_NAME>().find(deviceName) != std::string::npos)
+				{
+					std::cout << "Using platform: "<<platform.getInfo<CL_PLATFORM_NAME>()<<std::endl;
+					std::cout<< "Using device: "<<curDevice.getInfo<CL_DEVICE_NAME>()<<std::endl;
+					deviceFound = true;
+					device = curDevice;
+					break;
+				}
+			}
+			if (deviceFound)
+				break;
+		}
+		if (deviceFound == false)
+			throw std::runtime_error(std::string("Failed to find the specified device ") + deviceName);
+	}
 	 
 	context = cl::Context({device}, NULL, NULL, NULL, &err);
 	if (err != CL_SUCCESS)
